@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>LIDAR Data Viz</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+	<script type="text/javascript">
+	function mc_init() {
+		var socket = io.connect('http://'+document.domain+':'+location.port);
+
+		socket.on('connect', function(msg) {
+			socket.emit('my event', {data: 'I\'m connected!'});
+		});
+
+		socket.on('message', function(msg){
+			console.log(msg.time)
+			console.log(msg.data)
+			document.getElementById('rate').innerHTML = msg.time; 
+			var trace1 = {
+				mode: 'lines',
+				name: 'Distance (mm) ',
+				line: {color: 'peru'},
+				type: 'scatterpolar'
+			};
+			var obj = JSON.parse(msg.data);
+			trace1.r = Object.values(obj);
+			trace1.theta = Object.keys(obj);
+			console.log(trace1.r);
+			var data = [trace1];
+			var layout = {
+				title: 'YDLIDAR Distance Measurements',
+				font: {
+					family: 'Arial, sans-serif;',
+					size: 12,
+					color: '#000'
+				},
+				polar: {
+					angularaxis: {
+						visible: true,
+						rotation: 0,
+						direction: 'clockwise'
+					}
+				},
+				showlegend: true,
+			};
+			Plotly.newPlot('chart', [trace1], layout, {showSendToCloud: true});
+		});
+	}
+	</script>
+	</head>
+	<body onload="javascript:mc_init()">
+		<h3>YDLIDAR Data Viz</h3>
+		<p>
+			Refresh rate (sec): 
+			<span id='rate'> 0.0</span>
+		</p>
+		<div id="chart"></div>
+	</body>
+</html>
